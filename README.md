@@ -3,7 +3,7 @@
 
 # AspNetCore Api Example
 
-postman export 
+postman export file is AspNetCoreApiExample.postman_collection.json
 ![](./AspNetCoreApiExample.postman_collection.json)
 
 ![](./e0.png)
