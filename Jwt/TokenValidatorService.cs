@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using AspNetCoreApiExample.Caching;
+using AspNetCoreApiExample.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.EntityFrameworkCore;
 
 namespace AspNetCoreApiExample.Jwt
 {
@@ -18,16 +17,15 @@ namespace AspNetCoreApiExample.Jwt
 
     public class TokenValidatorService : ITokenValidatorService
     {
-        private readonly IMemoryCache _memoryCache;
+        private readonly MyDBContext _dbContext;
 
-        public TokenValidatorService(IMemoryCache memoryCache)
+        public TokenValidatorService(MyDBContext dbContext)
         {
-            _memoryCache = memoryCache;
+            _dbContext = dbContext;
         }
 
         public async Task ValidateAsync(TokenValidatedContext context)
         {
-
             var claimsIdentity = context.Principal.Identity as ClaimsIdentity;
             if (claimsIdentity?.Claims == null || !claimsIdentity.Claims.Any())
             {
@@ -35,21 +33,12 @@ namespace AspNetCoreApiExample.Jwt
                 return;
             }
 
-            var email = claimsIdentity.FindFirst(ClaimTypes.Email).Value;
-            if (string.IsNullOrWhiteSpace(email))
+            var userId = claimsIdentity.FindAll(ClaimTypes.NameIdentifier).Last().Value;
+            if (string.IsNullOrWhiteSpace(userId))
             {
                 context.Fail("This is not our issued token. It has no user-id.");
                 return;
             }
-
-            if (email.ToLower() != "admin@admin.com")
-            {
-                // user has changed his/her password/roles/stat/IsActive
-                context.Fail("This token is expired. Please login again.");
-                return;
-
-            }
-
 
 
             var accessToken = context.SecurityToken as JwtSecurityToken;
@@ -59,13 +48,18 @@ namespace AspNetCoreApiExample.Jwt
                 return;
             }
 
-            _memoryCache.TryGetValue(CacheKeys.AccessToken, out string _accessToken);
-            if (string.IsNullOrWhiteSpace(_accessToken) || _accessToken != accessToken.RawData) 
+            var r = _dbContext.UserTokens.Count();
+            var userToken = await
+                _dbContext.UserTokens.FirstOrDefaultAsync(x => x.AccessToken == accessToken.RawData &&
+                                                               x.OwnerUserId == Int32.Parse(userId));
+
+
+            if (userToken?.AccessTokenExpiration >= DateTime.UtcNow)
+            { }
+            else
             {
                 context.Fail("This token is not in our database.");
-                return;
             }
-
         }
     }
 }

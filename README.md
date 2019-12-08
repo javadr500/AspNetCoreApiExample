@@ -3,8 +3,10 @@
 
 # AspNetCore Api Example
 
-UserName: admin@admin.com
-Password: admin
+postman export 
+![](./AspNetCoreApiExample.postman_collection.json)
+
+![](./e0.png)
 
 
 ![](./e1.png)

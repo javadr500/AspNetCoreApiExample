@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AspNetCoreApiExample.Infrastructure;
 using AspNetCoreApiExample.Jwt;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -30,6 +33,15 @@ namespace AspNetCoreApiExample
         public void ConfigureServices(IServiceCollection services)
         {
             JwtConfigModel.Init(Configuration);
+
+            services.AddDbContext<MyDBContext>(options =>
+            {
+                options.UseInMemoryDatabase("TestDB");
+            });
+
+            services.AddTransient<IClaimsTransformation, ClaimsTransformer>();
+            services.AddTransient<MyDBContext>();
+
 
             services.AddScoped<ITokenValidatorService, TokenValidatorService>();
 

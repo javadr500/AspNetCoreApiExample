@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Security.Claims;
 using AspNetCoreApiExample.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.Web.CodeGeneration.Contracts.Messaging;
 
 namespace AspNetCoreApiExample.Controllers.v1
 {
@@ -17,13 +13,26 @@ namespace AspNetCoreApiExample.Controllers.v1
     [Authorize]
     public class BaseController : ControllerBase
     {
+        protected int CurrentUserId
+        {
+            get
+            {
+                var claims = User.Identity as MyIdentity;
+                if (claims != null)
+                {
+                    return claims.Id;
+                }
+
+                return 0;
+            }
+        }
+
 
         protected AppResult SuccessfullResult(object data = null)
         {
             var result = new AppResult { Success = true, Data = data };
             return result;
         }
-
 
 
         protected AppResult SuccessfullMessage(object data = null)
@@ -48,8 +57,5 @@ namespace AspNetCoreApiExample.Controllers.v1
 
             return result;
         }
-
-
-
     }
 }
